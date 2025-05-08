@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.TV_Video_list" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>
