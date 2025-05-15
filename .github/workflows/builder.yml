@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload APK as astifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@main
         with:
          name: app-debug.apk
          path: app/build/output/apk/debug/app-debug.apk
