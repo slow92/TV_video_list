@@ -2,5 +2,6 @@
     <string name="app_name">TV_Video_list</string>
     <string name="most_popular">Most popular</string>
     <string name="top_rated">Top rated</string>
-    <string name="fetching_movies_error">Fetching movies error</string>
+    <string name="tmdb_connection_error">Tmdb connection error</string>
+    <string name="play_movie_icon">Play movie icon</string>
 </resources>

@@ -40,7 +40,7 @@ import com.example.tv_video_list.viewmodel.MovieViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,6 +51,8 @@ import androidx.tv.material3.Icon
 
 class MainActivity : ComponentActivity() {
 
+    enum class Size { Large, Small }
+
     private val viewModel: MovieViewModel by viewModels()
 
     @OptIn(ExperimentalTvMaterial3Api::class)
@@ -58,9 +60,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val viewModel = ViewModelProvider(this)[MovieViewModel::class.java]
-        viewModel.fetchMovies("apiKey")
         viewModel.errorLivData.observe(this) { msg ->
             Toast.makeText(this, getString(msg), Toast.LENGTH_LONG).show()
+            viewModel.errorLivData.value = 0
         }
         setContent {
             TV_Video_listTheme {
@@ -74,17 +76,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    enum class Size { Large, Small }
-
     @Composable
     fun MovieScreen() {
         val moviesPopular by viewModel.moviesPopular.collectAsState()
         val moviesTop by viewModel.moviesTop.collectAsState()
         val genresList by viewModel.genres.collectAsState()
         val configDetails by viewModel.configDetails.collectAsState()
-        val imageUrlPrefix = configDetails?.secure_base_url +
+        var imageUrlPrefix: String? = configDetails?.secure_base_url +
                 configDetails?.backdrop_sizes?.last()
-
 
         Column(
             modifier = Modifier
@@ -103,16 +102,18 @@ class MainActivity : ComponentActivity() {
                 style = MaterialTheme.typography.titleSmall
             )
 
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(moviesPopular) { movie ->
-                    val genreString = genresList
-                        .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
-                    MovieCard(
-                        movie = movie,
-                        size = Size.Large,
-                        genreString = genreString,
-                        imageUrlPrefix = imageUrlPrefix
-                    )
+            imageUrlPrefix?.let {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    items(moviesPopular) { movie ->
+                        val genreString = genresList
+                            .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
+                        MovieCard(
+                            movie = movie,
+                            size = Size.Large,
+                            genreString = genreString,
+                            imageUrlPrefix = imageUrlPrefix
+                        )
+                    }
                 }
             }
 
@@ -128,16 +129,18 @@ class MainActivity : ComponentActivity() {
                 style = MaterialTheme.typography.titleSmall
             )
 
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(moviesTop) { movie ->
-                    val genreString = genresList
-                        .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
-                    MovieCard(
-                        movie = movie,
-                        size = Size.Small,
-                        genreString = genreString,
-                        imageUrlPrefix = imageUrlPrefix
-                    )
+            imageUrlPrefix?.let {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    items(moviesTop) { movie ->
+                        val genreString = genresList
+                            .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
+                        MovieCard(
+                            movie = movie,
+                            size = Size.Small,
+                            genreString = genreString,
+                            imageUrlPrefix = imageUrlPrefix
+                        )
+                    }
                 }
             }
         }
@@ -171,12 +174,12 @@ class MainActivity : ComponentActivity() {
                 )
 
                 Icon(
-                    Icons.Default.PlayArrow,
+                    Icons.Outlined.PlayArrow,
                     tint = Color.Red,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(if (size == Size.Large) 8.dp else 5.dp),
-                    contentDescription = ""
+                    contentDescription = getString(R.string.play_movie_icon)
                 )
             }
 
