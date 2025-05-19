@@ -11,16 +11,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.tv.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -51,7 +49,11 @@ import androidx.tv.material3.Icon
 
 class MainActivity : ComponentActivity() {
 
-    enum class Size { Large, Small }
+    data class MoviesCategory(
+        val title: String,
+        val size: Int,
+        val moviesList: List<Movie>
+    )
 
     private val viewModel: MovieViewModel by viewModels()
 
@@ -64,6 +66,7 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, getString(msg), Toast.LENGTH_LONG).show()
             viewModel.errorLivData.value = 0
         }
+
         setContent {
             TV_Video_listTheme {
                 Surface(
@@ -85,61 +88,41 @@ class MainActivity : ComponentActivity() {
         var imageUrlPrefix: String? = configDetails?.secure_base_url +
                 configDetails?.backdrop_sizes?.last()
 
-        Column(
+        val moviesData = listOf(
+            MoviesCategory(getString(R.string.most_popular), 240, moviesPopular),
+            MoviesCategory(getString(R.string.top_rated), 200, moviesTop),
+            MoviesCategory(getString(R.string.most_popular), 500, moviesPopular)
+        )
+
+        LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .fillMaxSize(),
             horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                text = getString(R.string.most_popular),
-                color = Color.Gray,
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.titleSmall
-            )
+            items(moviesData) { category ->
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    text = category.title,
+                    color = Color.Gray,
+                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleSmall
+                )
 
-            imageUrlPrefix?.let {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(moviesPopular) { movie ->
-                        val genreString = genresList
-                            .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
-                        MovieCard(
-                            movie = movie,
-                            size = Size.Large,
-                            genreString = genreString,
-                            imageUrlPrefix = imageUrlPrefix
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                text = getString(R.string.top_rated),
-                color = Color.Gray,
-                fontSize = 20.sp,
-                style = MaterialTheme.typography.titleSmall
-            )
-
-            imageUrlPrefix?.let {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(moviesTop) { movie ->
-                        val genreString = genresList
-                            .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
-                        MovieCard(
-                            movie = movie,
-                            size = Size.Small,
-                            genreString = genreString,
-                            imageUrlPrefix = imageUrlPrefix
-                        )
+                imageUrlPrefix?.let {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        items(category.moviesList) { movie ->
+                            val genreString = genresList
+                                .filter { it.id in movie.genre_ids }.joinToString(", ") { it.name }
+                            MovieCard(
+                                movie = movie,
+                                size = category.size,
+                                genreString = genreString,
+                                imageUrlPrefix = imageUrlPrefix
+                            )
+                        }
                     }
                 }
             }
@@ -148,12 +131,12 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalTvMaterial3Api::class)
     @Composable
-    fun MovieCard(movie: Movie, size: Size, genreString: String, imageUrlPrefix: String) {
+    fun MovieCard(movie: Movie, size: Int, genreString: String, imageUrlPrefix: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .height(if (size == Size.Large) 160.dp else 120.dp)
-                .width(if (size == Size.Large) 200.dp else 150.dp)
+                .height((size.div(1.78) + 50).dp)
+                .width(size.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.DarkGray)
                 .clickable(onClick = {}),
@@ -178,7 +161,7 @@ class MainActivity : ComponentActivity() {
                     tint = Color.Red,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(if (size == Size.Large) 8.dp else 5.dp),
+                        .padding(8.dp),
                     contentDescription = getString(R.string.play_movie_icon)
                 )
             }
@@ -189,7 +172,7 @@ class MainActivity : ComponentActivity() {
                     .padding(start = 8.dp, end = 8.dp),
                 text = movie.title,
                 color = Color.White,
-                fontSize = if (size == Size.Large) 15.sp else 10.sp,
+                fontSize = 12.sp,
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -201,7 +184,7 @@ class MainActivity : ComponentActivity() {
                     .padding(start = 8.dp, end = 8.dp),
                 text = genreString,
                 color = Color.LightGray,
-                fontSize = if (size == Size.Large) 10.sp else 7.sp,
+                fontSize = 10.sp,
                 style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
