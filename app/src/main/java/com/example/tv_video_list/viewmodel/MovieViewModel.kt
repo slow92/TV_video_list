@@ -84,6 +84,6 @@ class MovieViewModel : ViewModel() {
     }
 
     companion object {
-        const val API_KEY: String = ""
+        const val API_KEY: String = "."
     }
 }
