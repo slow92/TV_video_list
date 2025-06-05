@@ -75,7 +75,7 @@ class MovieViewModel : ViewModel() {
 
     fun fetchPopularMovies() {
         viewModelScope.launch(coroutineContext) {
-            val popularMoviesResponse = RetrofitInstance.api.getTopRatedMovies(API_KEY)
+            val popularMoviesResponse = RetrofitInstance.api.getPopularMovies(API_KEY)
             if (popularMoviesResponse.isSuccessful) {
                 _moviesPopular.value =
                     popularMoviesResponse.body()?.results ?: emptyList()
