@@ -35,7 +35,7 @@ fun MovieCard(movie: Movie, size: Int, genreString: String, imageUrlPrefix: Stri
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .height((size.div(1.78) + 50).dp)
+            .height((size.div(1.78) + 60).dp)
             .width(size.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color.DarkGray)
